@@ -1,4 +1,4 @@
-# SIT Visitor Log — Demo
+# Visitor Log — Demo
 
 Live demo of the **VisitorLog** visitor management system built for facility/office use.
 
