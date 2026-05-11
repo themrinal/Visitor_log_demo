@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SIT | Visitor Log — Entry</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    .demo-banner {
+      background: #FEF3C7; border-bottom: 1px solid #FCD34D;
+      text-align: center; padding: 9px 16px;
+      font-size: 13px; font-weight: 600; color: #92400E;
+      letter-spacing: 0.1px;
+    }
+    .demo-banner a { color: #78350F; }
+
+    :root {
+      --bg: #F4F2ED;
+      --card: #FFFFFF;
+      --accent: #1A3C5E;
+      --accent-hover: #122D47;
+      --accent-light: #E8EFF6;
+      --accent-mid: #2D6A9F;
+      --text: #1C1C1C;
+      --muted: #6B7280;
+      --border: #E0DBD3;
+      --input-bg: #FAFAF8;
+      --success-bg: #EAF6F0;
+      --success-text: #166534;
+      --success-border: #BBF7D0;
+      --error-bg: #FEF2F2;
+      --error-text: #991B1B;
+      --error-border: #FECACA;
+      --radius: 10px;
+      --nav-h: 60px;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      color: var(--text);
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      height: var(--nav-h);
+      background: var(--accent);
+      display: flex; align-items: center;
+      padding: 0 2rem;
+      gap: 2rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    }
+    .nav-brand {
+      display: flex; align-items: center; gap: 9px;
+      margin-right: auto;
+      text-decoration: none;
+    }
+    .nav-brand img { height: 36px; width: auto; object-fit: contain; }
+    .nav-brand span { font-family: 'DM Serif Display', serif; font-size: 17px; color: #fff; letter-spacing: 0.2px; }
+    .nav-link {
+      display: flex; align-items: center; gap: 6px;
+      padding: 6px 14px;
+      border-radius: 7px;
+      font-size: 13px; font-weight: 500;
+      text-decoration: none;
+      color: rgba(255,255,255,0.7);
+      transition: background 0.15s, color 0.15s;
+    }
+    .nav-link svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .nav-link:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .nav-link.active { background: rgba(255,255,255,0.18); color: #fff; }
+
+    /* ── LAYOUT ── */
+    .page { max-width: 860px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+
+    .page-head { text-align: center; margin-bottom: 1.75rem; }
+    .page-head h2 { font-family: 'DM Serif Display', serif; font-size: 24px; font-weight: 400; color: var(--accent); }
+    .page-head p { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      border: 1px solid var(--border);
+      padding: 1.75rem;
+      box-shadow: 0 2px 20px rgba(26,60,94,0.07);
+    }
+    .card-layout {
+      display: flex;
+      align-items: flex-start;
+      gap: 0;
+    }
+    .col-left {
+      width: 260px;
+      flex-shrink: 0;
+      padding-right: 1.75rem;
+      border-right: 1px solid var(--border);
+    }
+    .col-right {
+      flex: 1;
+      padding-left: 1.75rem;
+    }
+
+    /* ── WEBCAM ── */
+    .webcam-section { margin-bottom: 0; }
+    .webcam-label {
+      font-size: 12px; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.6px;
+      margin-bottom: 8px; display: flex; align-items: center; gap: 5px;
+    }
+    .webcam-label .req { color: #DC2626; margin-left: 1px; }
+    .webcam-box {
+      border: 1.5px dashed var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      background: #F8F7F4;
+      position: relative;
+      width: 100%;
+      height: 200px;
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column;
+      gap: 10px;
+    }
+    #video { width: 100%; height: 100%; object-fit: cover; display: none; border-radius: 10px; }
+    #canvas { display: none; }
+    #photo-preview {
+      width: 100%; height: 100%; object-fit: cover;
+      border-radius: 10px; display: none;
+    }
+    .cam-placeholder { text-align: center; padding: 1rem; pointer-events: none; }
+    .cam-placeholder svg { width: 40px; height: 40px; stroke: #C5C0B8; fill: none; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; margin-bottom: 6px; }
+    .cam-placeholder p { font-size: 13px; color: var(--muted); }
+
+    .webcam-actions { display: flex; gap: 8px; margin-top: 10px; }
+    .btn-cam {
+      flex: 1; padding: 9px;
+      border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px; font-weight: 600;
+      cursor: pointer; border: none;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: all 0.15s;
+    }
+    .btn-cam svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .btn-cam-start { background: var(--accent-light); color: var(--accent); border: 1px solid #C8DCF0; }
+    .btn-cam-start:hover { background: #d4e5f5; }
+    .btn-cam-snap  { background: var(--accent); color: #fff; }
+    .btn-cam-snap:hover { background: var(--accent-hover); }
+    .btn-cam-snap:disabled { background: #94A3B8; cursor: not-allowed; }
+    .btn-cam-retake { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
+    .btn-cam-retake:hover { background: #fee2e2; }
+
+    /* ── DIVIDER ── */
+    .divider { height: 1px; background: var(--border); margin: 1.25rem 0; }
+
+    /* ── FIELDS ── */
+    .fields { display: flex; flex-direction: column; gap: 1rem; }
+    .field label {
+      display: block;
+      font-size: 12px; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.6px;
+      margin-bottom: 5px;
+    }
+    .field label .req { color: #DC2626; margin-left: 2px; }
+
+    input[type="text"], input[type="tel"], input[type="number"], textarea, select {
+      width: 100%;
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 13px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px; color: var(--text);
+      outline: none; appearance: none; -webkit-appearance: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--accent-mid);
+      box-shadow: 0 0 0 3px rgba(45,106,159,0.1);
+      background: #fff;
+    }
+    input.invalid, textarea.invalid, select.invalid {
+      border-color: #DC2626;
+      box-shadow: 0 0 0 3px rgba(220,38,38,0.08);
+    }
+    input::placeholder, textarea::placeholder { color: #C0BAB2; }
+    textarea { resize: vertical; min-height: 70px; line-height: 1.5; }
+    .select-wrap { position: relative; }
+    .select-wrap::after {
+      content: ''; position: absolute; right: 12px; top: 50%;
+      transform: translateY(-50%);
+      border-left: 4px solid transparent; border-right: 4px solid transparent;
+      border-top: 5px solid var(--muted); pointer-events: none;
+    }
+
+    .accompany-hint { font-size: 0.78rem; color: var(--muted); font-weight: 400; margin-left: 6px; }
+
+    /* Clock strip */
+    .clock-strip {
+      display: flex; align-items: center; gap: 9px;
+      background: var(--accent-light); border-radius: var(--radius);
+      padding: 9px 13px; border: 1px solid #C8DCF0; margin-bottom: 1.25rem;
+    }
+    .clock-strip svg { width: 16px; height: 16px; stroke: var(--accent-mid); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+    .clock-strip span { font-size: 13px; font-weight: 500; color: var(--accent); }
+
+    /* Submit btn */
+    .btn-submit {
+      width: 100%; background: var(--accent); color: #fff;
+      border: none; border-radius: var(--radius);
+      padding: 13px; font-family: 'DM Sans', sans-serif;
+      font-size: 15px; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: background 0.15s, transform 0.1s;
+      margin-top: 1.25rem;
+    }
+    .btn-submit:hover { background: var(--accent-hover); }
+    .btn-submit:active { transform: scale(0.98); }
+    .btn-submit:disabled { background: #94A3B8; cursor: not-allowed; transform: none; }
+    .btn-submit svg { width: 17px; height: 17px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    .msg {
+      display: none; padding: 11px 14px;
+      border-radius: var(--radius); font-size: 14px; font-weight: 500;
+      margin-top: 1rem;
+    }
+    .msg.success { display: block; background: var(--success-bg); color: var(--success-text); border: 1px solid var(--success-border); }
+    .msg.error   { display: block; background: var(--error-bg);   color: var(--error-text);   border: 1px solid var(--error-border); }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+
+    .footer-note { text-align: center; margin-top: 1.25rem; font-size: 12px; color: var(--muted); }
+  </style>
+</head>
+<body>
+
+<div class="demo-banner">
+  DEMO MODE — Entries are not saved. &nbsp;|&nbsp; <a href="visitor-list.html">View sample records →</a>
+</div>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-brand" href="index.html">
+    <img src="data/img/logo.png" alt="Logo"/>
+  </a>
+  <a class="nav-link active" href="index.html">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    New Entry
+  </a>
+  <a class="nav-link" href="visitor-list.html">
+    <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    Records
+  </a>
+</nav>
+
+<div class="page">
+  <div class="page-head">
+    <h2>Visitor Entry</h2>
+    <p>Take permission to capture photograph</p>
+  </div>
+
+  <div class="card">
+    <div class="card-layout">
+
+      <!-- LEFT: WEBCAM -->
+      <div class="col-left">
+        <div class="webcam-section">
+          <div class="webcam-label">
+            Visitor photo <span class="req">*</span>
+          </div>
+          <div class="webcam-box" id="webcam-box">
+            <video id="video" autoplay playsinline></video>
+            <canvas id="canvas"></canvas>
+            <img id="photo-preview" alt="Captured photo"/>
+            <div class="cam-placeholder" id="cam-placeholder">
+              <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <p>Camera preview will appear here</p>
+            </div>
+          </div>
+          <div class="webcam-actions">
+            <button class="btn-cam btn-cam-start" id="btn-start" onclick="startCamera()">
+              <svg viewBox="0 0 24 24"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              Open camera
+            </button>
+            <button class="btn-cam btn-cam-snap" id="btn-snap" onclick="snapPhoto()" disabled>
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+              Capture
+            </button>
+            <button class="btn-cam btn-cam-retake" id="btn-retake" onclick="retakePhoto()" style="display:none;">
+              <svg viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.95"/></svg>
+              Retake
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: FORM -->
+      <div class="col-right">
+
+        <!-- CLOCK -->
+        <div class="clock-strip">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          <span id="clock">—</span>
+        </div>
+
+        <!-- FIELDS -->
+        <div class="fields">
+          <div class="field">
+            <label>Full name <span class="req">*</span></label>
+            <input type="text" id="f-name" placeholder="e.g. Mrinal Das" autocomplete="off"/>
+          </div>
+          <div class="field">
+            <label>Mobile number <span class="req">*</span></label>
+            <input type="tel" id="f-mobile" placeholder="10-digit number" maxlength="10" autocomplete="off"/>
+          </div>
+          <div class="field">
+            <label>Address <span class="req">*</span></label>
+            <textarea id="f-address" placeholder="Street, City, State"></textarea>
+          </div>
+          <div class="field">
+            <label>Purpose of visit <span class="req">*</span></label>
+            <div class="select-wrap">
+              <select id="f-purpose">
+                <option value="">Select purpose…</option>
+                <option>Admission</option>                
+                <option>PTM</option>
+                <option>Meeting</option>
+                <option>Examination</option>
+                <option>Interview</option>
+                <option>Personal work</option>
+                <option>Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Along with (no. of visitors) <span class="accompany-hint">0 = visiting alone</span></label>
+            <input type="text" id="f-accompany" inputmode="numeric" placeholder="0" autocomplete="off" maxlength="3"/>
+          </div>
+        </div>
+
+        <button class="btn-submit" id="btn-submit" onclick="submitForm()">
+          <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+          Submit visitor entry
+        </button>
+
+        <div class="msg" id="msg"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="footer-note"> <code>Mrinal Das | mrinaldas@live.com</code></div>
+</div>
+
+<script>
+  let stream = null;
+  let photoDataUrl = null;
+
+  // Live clock
+  function tick() {
+    document.getElementById('clock').textContent = new Date().toLocaleString('en-IN', {
+      weekday:'short', day:'2-digit', month:'short', year:'numeric',
+      hour:'2-digit', minute:'2-digit', second:'2-digit'
+    });
+  }
+  tick(); setInterval(tick, 1000);
+
+  // Camera
+  async function startCamera() {
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: 640, height: 480 }, audio: false });
+      const video = document.getElementById('video');
+      video.srcObject = stream;
+      video.style.display = 'block';
+      document.getElementById('cam-placeholder').style.display = 'none';
+      document.getElementById('photo-preview').style.display = 'none';
+      document.getElementById('btn-start').style.display = 'none';
+      document.getElementById('btn-snap').disabled = false;
+      document.getElementById('btn-retake').style.display = 'none';
+    } catch(e) {
+      showMsg('Camera access denied. Please allow camera permission in your browser.', false);
+    }
+  }
+
+  function snapPhoto() {
+    const video  = document.getElementById('video');
+    const canvas = document.getElementById('canvas');
+    canvas.width  = video.videoWidth  || 640;
+    canvas.height = video.videoHeight || 480;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    photoDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+
+    const preview = document.getElementById('photo-preview');
+    preview.src = photoDataUrl;
+    preview.style.display = 'block';
+    video.style.display = 'none';
+
+    if (stream) stream.getTracks().forEach(t => t.stop());
+
+    document.getElementById('btn-snap').disabled = true;
+    document.getElementById('btn-snap').style.display = 'none';
+    document.getElementById('btn-retake').style.display = 'flex';
+    document.getElementById('btn-start').style.display = 'none';
+  }
+
+  function retakePhoto() {
+    photoDataUrl = null;
+    document.getElementById('photo-preview').style.display = 'none';
+    document.getElementById('btn-snap').style.display = 'flex';
+    document.getElementById('btn-retake').style.display = 'none';
+    startCamera();
+  }
+
+  // Validation
+  function setInvalid(id, yes) {
+    const el = document.getElementById(id);
+    if (yes) el.classList.add('invalid'); else el.classList.remove('invalid');
+  }
+
+  function showMsg(text, ok) {
+    const el = document.getElementById('msg');
+    el.className = 'msg ' + (ok ? 'success' : 'error');
+    el.textContent = text;
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function setLoading(on) {
+    const btn = document.getElementById('btn-submit');
+    btn.disabled = on;
+    btn.innerHTML = on
+      ? '<div class="spinner"></div> Saving…'
+      : '<svg viewBox="0 0 24 24" style="width:17px;height:17px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round"><polyline points="20 6 9 17 4 12"/></svg> Submit visitor entry';
+  }
+
+  async function submitForm() {
+    const name    = document.getElementById('f-name').value.trim();
+    const mobile  = document.getElementById('f-mobile').value.trim();
+    const address = document.getElementById('f-address').value.trim();
+    const purpose = document.getElementById('f-purpose').value;
+
+    let valid = true;
+
+    if (!photoDataUrl) {
+      showMsg('Please capture the visitor\'s photo before submitting.', false);
+      valid = false;
+    }
+
+    setInvalid('f-name',    !name);    if (!name)    valid = false;
+    setInvalid('f-mobile',  !/^\d{10}$/.test(mobile)); if (!/^\d{10}$/.test(mobile)) valid = false;
+    setInvalid('f-address', !address); if (!address) valid = false;
+    setInvalid('f-purpose', !purpose); if (!purpose) valid = false;
+
+    if (!valid) {
+      if (photoDataUrl) showMsg('Please fill in all required fields correctly.', false);
+      return;
+    }
+
+    const datetime = new Date().toLocaleString('en-IN', {
+      day:'2-digit', month:'short', year:'numeric',
+      hour:'2-digit', minute:'2-digit', second:'2-digit'
+    });
+
+    // DEMO MODE — simulate a save without a real server
+    setLoading(true);
+    await new Promise(r => setTimeout(r, 800));
+    showMsg('✓ Demo: entry received! (No data is actually stored in this demo.)', true);
+    ['f-name','f-mobile','f-address'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('f-purpose').value = '';
+    document.getElementById('f-accompany').value = '';
+    photoDataUrl = null;
+    document.getElementById('photo-preview').style.display = 'none';
+    document.getElementById('cam-placeholder').style.display = 'flex';
+    document.getElementById('btn-start').style.display = 'flex';
+    document.getElementById('btn-snap').style.display = 'flex';
+    document.getElementById('btn-snap').disabled = true;
+    document.getElementById('btn-retake').style.display = 'none';
+    setLoading(false);
+  }
+
+  // Remove invalid style on input
+  ['f-name','f-mobile','f-address','f-purpose'].forEach(id => {
+    document.getElementById(id).addEventListener('input', () => setInvalid(id, false));
+    document.getElementById(id).addEventListener('change', () => setInvalid(id, false));
+  });
+
+  // Digits only for accompany field
+  document.getElementById('f-accompany').addEventListener('input', function() {
+    this.value = this.value.replace(/\D/g, '');
+  });
+  document.getElementById('f-accompany').addEventListener('keydown', function(e) {
+    if (e.key.length === 1 && !/\d/.test(e.key) && !e.ctrlKey && !e.metaKey) e.preventDefault();
+  });
+</script>
+</body>
+</html>

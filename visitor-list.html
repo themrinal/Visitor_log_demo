@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SIT Visitor Log — Records</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #F4F2ED; --card: #FFFFFF; --accent: #1A3C5E; --accent-hover: #122D47;
+      --accent-light: #E8EFF6; --accent-mid: #2D6A9F; --text: #1C1C1C;
+      --muted: #6B7280; --border: #E0DBD3; --input-bg: #FAFAF8;
+      --row-hover: #F8F7F4; --radius: 10px; --nav-h: 60px;
+    }
+    body { font-family: 'DM Sans', sans-serif; background: var(--bg); min-height: 100vh; color: var(--text); }
+
+    nav {
+      position: sticky; top: 0; z-index: 100; height: var(--nav-h);
+      background: var(--accent); display: flex; align-items: center;
+      padding: 0 2rem; gap: 2rem; box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    }
+    .nav-brand { display: flex; align-items: center; gap: 9px; margin-right: auto; text-decoration: none; }
+    .nav-brand img { height: 36px; width: auto; object-fit: contain; }
+    .nav-brand span { font-family: 'DM Serif Display', serif; font-size: 17px; color: #fff; }
+    .nav-link { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 7px; font-size: 13px; font-weight: 500; text-decoration: none; color: rgba(255,255,255,0.7); transition: background 0.15s, color 0.15s; }
+    .nav-link svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .nav-link:hover { background: rgba(255,255,255,0.1); color: #fff; }
+    .nav-link.active { background: rgba(255,255,255,0.18); color: #fff; }
+
+    .page { max-width: 1040px; margin: 0 auto; padding: 2rem 1rem 4rem; }
+    .page-head { margin-bottom: 1.5rem; }
+    .page-head h2 { font-family: 'DM Serif Display', serif; font-size: 22px; font-weight: 400; color: var(--accent); }
+    .page-head p { font-size: 13px; color: var(--muted); margin-top: 3px; }
+
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 1.25rem; }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; }
+    .stat-card .label { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-card .value { font-size: 24px; font-weight: 600; color: var(--accent); margin-top: 2px; }
+
+    .filter-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem; margin-bottom: 1.25rem; box-shadow: 0 2px 16px rgba(26,60,94,0.06); }
+    .filter-title { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 1rem; display: flex; align-items: center; gap: 6px; }
+    .filter-title svg { width: 13px; height: 13px; stroke: var(--muted); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 10px; align-items: end; }
+    .filter-group label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+    select, input[type="date"] { width: 100%; background: var(--input-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 9px 12px; font-family: 'DM Sans', sans-serif; font-size: 14px; color: var(--text); outline: none; appearance: none; -webkit-appearance: none; transition: border-color 0.15s, box-shadow 0.15s; cursor: pointer; }
+    select:focus, input[type="date"]:focus { border-color: var(--accent-mid); box-shadow: 0 0 0 3px rgba(45,106,159,0.1); }
+    .select-wrap { position: relative; }
+    .select-wrap::after { content: ''; position: absolute; right: 11px; top: 50%; transform: translateY(-50%); border-left: 4px solid transparent; border-right: 4px solid transparent; border-top: 5px solid var(--muted); pointer-events: none; }
+    .filter-actions { display: flex; gap: 8px; margin-top: 1rem; flex-wrap: wrap; }
+    .btn-f { padding: 8px 18px; border-radius: var(--radius); font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; border: none; transition: all 0.15s; }
+    .btn-f:active { transform: scale(0.97); }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-ghost { background: var(--input-bg); color: var(--muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { background: var(--border); }
+
+    .table-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 2px 16px rgba(26,60,94,0.06); overflow: hidden; }
+    .table-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 8px; }
+    .table-header span { font-size: 13px; color: var(--muted); }
+    .table-header strong { color: var(--accent); }
+    .btn-export { display: inline-flex; align-items: center; gap: 5px; padding: 7px 14px; background: var(--accent-light); color: var(--accent); border: 1px solid #C8DCF0; border-radius: var(--radius); font-size: 12px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+    .btn-export:hover { background: #d4e5f5; }
+    .btn-export svg { width: 13px; height: 13px; stroke: var(--accent); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    thead th { background: #F8F7F4; padding: 10px 14px; text-align: left; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); border-bottom: 1px solid var(--border); white-space: nowrap; }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: var(--row-hover); }
+    tbody td { padding: 10px 14px; vertical-align: middle; }
+    tbody td.muted { color: var(--muted); font-size: 13px; }
+    .sno { color: var(--muted); font-size: 12px; }
+
+    .photo-thumb { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border); cursor: pointer; transition: transform 0.15s; display: block; }
+    .photo-thumb:hover { transform: scale(1.08); }
+    .no-photo { width: 40px; height: 40px; border-radius: 8px; background: var(--input-bg); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
+    .no-photo svg { width: 18px; height: 18px; stroke: #C5C0B8; fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+    .badge-meeting   { background: #EEF2FF; color: #3730A3; }
+    .badge-delivery  { background: #FEF3C7; color: #92400E; }
+    .badge-interview { background: #F0FDF4; color: #166534; }
+    .badge-personal  { background: #FDF2F8; color: #86198F; }
+    .badge-other     { background: #F1F5F9; color: #475569; }
+
+    .state-box { padding: 3rem 1rem; text-align: center; color: var(--muted); }
+    .state-box svg { width: 38px; height: 38px; stroke: #C5C0B8; fill: none; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; margin-bottom: 8px; }
+    .state-box p { font-size: 14px; }
+
+    .demo-banner {
+      background: #FEF3C7; border-bottom: 1px solid #FCD34D;
+      text-align: center; padding: 9px 16px;
+      font-size: 13px; font-weight: 600; color: #92400E;
+    }
+    .demo-banner a { color: #78350F; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner-ring { width: 30px; height: 30px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; margin: 0 auto 10px; }
+
+    .lightbox { display: none; position: fixed; inset: 0; z-index: 999; background: rgba(0,0,0,0.78); align-items: center; justify-content: center; }
+    .lightbox.open { display: flex; }
+    .lightbox img { max-width: 88vw; max-height: 84vh; border-radius: 12px; box-shadow: 0 8px 40px rgba(0,0,0,0.5); }
+    .lb-close { position: absolute; top: 18px; right: 22px; background: rgba(255,255,255,0.15); border: none; color: #fff; font-size: 20px; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+    .lb-close:hover { background: rgba(255,255,255,0.3); }
+
+    /* ── PASSWORD MODAL ── */
+    .pw-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(15,30,50,0.72);
+      display: flex; align-items: center; justify-content: center;
+      backdrop-filter: blur(3px);
+    }
+    .pw-overlay.hidden { display: none; }
+    .pw-card {
+      background: var(--card); border-radius: 18px;
+      border: 1px solid var(--border);
+      padding: 2.25rem 2rem 2rem;
+      width: 100%; max-width: 360px;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.28);
+      text-align: center;
+    }
+    .pw-brand {
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px; margin-bottom: 1.4rem;
+    }
+    .pw-brand svg { width: 24px; height: 24px; stroke: var(--accent); fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .pw-brand span { font-family: 'DM Serif Display', serif; font-size: 20px; color: var(--accent); }
+    .pw-card h3 { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .pw-card p  { font-size: 13px; color: var(--muted); margin-bottom: 1.4rem; }
+    .pw-field {
+      position: relative; margin-bottom: 0.75rem;
+    }
+    .pw-field input {
+      width: 100%; padding: 11px 42px 11px 14px;
+      border: 1.5px solid var(--border); border-radius: var(--radius);
+      font-family: 'DM Sans', sans-serif; font-size: 15px;
+      background: var(--input-bg); color: var(--text);
+      outline: none; transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .pw-field input:focus { border-color: var(--accent-mid); box-shadow: 0 0 0 3px rgba(45,106,159,0.1); }
+    .pw-field input.shake { animation: shake 0.35s ease; border-color: #DC2626; box-shadow: 0 0 0 3px rgba(220,38,38,0.1); }
+    .pw-toggle {
+      position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; padding: 4px;
+      color: var(--muted); display: flex; align-items: center;
+    }
+    .pw-toggle svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .pw-error { font-size: 13px; color: #991B1B; min-height: 18px; margin-bottom: 0.9rem; }
+    .pw-btn {
+      width: 100%; background: var(--accent); color: #fff;
+      border: none; border-radius: var(--radius);
+      padding: 12px; font-family: 'DM Sans', sans-serif;
+      font-size: 15px; font-weight: 600; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .pw-btn:hover { background: var(--accent-hover); }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%,60%  { transform: translateX(-6px); }
+      40%,80%  { transform: translateX(6px); }
+    }
+
+    @media (max-width: 600px) {
+      .filter-grid { grid-template-columns: 1fr 1fr; }
+      tbody td { padding: 8px 10px; font-size: 13px; }
+      thead th { padding: 8px 10px; }
+      nav { padding: 0 1rem; gap: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="demo-banner">
+  DEMO MODE — Sample data only. No real visitors. &nbsp;|&nbsp; <a href="index.html">Try the entry form →</a>
+</div>
+
+<nav>
+  <a class="nav-brand" href="index.html">
+    <img src="data/img/logo.png" alt="Logo"/>
+  </a>
+  <a class="nav-link" href="index.html">
+    <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    New Entry
+  </a>
+  <a class="nav-link active" href="visitor-list.html">
+    <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    Records
+  </a>
+</nav>
+
+<div class="lightbox" id="lightbox" onclick="closeLb()">
+  <button class="lb-close" onclick="closeLb()">✕</button>
+  <img id="lb-img" src="" alt="Visitor photo"/>
+</div>
+
+<div class="page">
+  <div class="page-head">
+    <h2>Visitor Records</h2>
+    <p>click a photo to enlarge</p>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card"><div class="label">Total</div><div class="value" id="stat-total">—</div></div>
+    <div class="stat-card"><div class="label">Showing</div><div class="value" id="stat-filtered">—</div></div>
+    <div class="stat-card"><div class="label">Today</div><div class="value" id="stat-today">—</div></div>
+    <div class="stat-card"><div class="label">This month</div><div class="value" id="stat-month">—</div></div>
+  </div>
+
+  <div class="filter-card">
+    <div class="filter-title">
+      <svg viewBox="0 0 24 24"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+      Filter visitors
+    </div>
+    <div class="filter-grid">
+      <div class="filter-group"><label>Year</label><div class="select-wrap"><select id="f-year"><option value="">All years</option></select></div></div>
+      <div class="filter-group"><label>Month</label><div class="select-wrap"><select id="f-month">
+        <option value="">All months</option>
+        <option value="0">January</option><option value="1">February</option><option value="2">March</option><option value="3">April</option>
+        <option value="4">May</option><option value="5">June</option><option value="6">July</option><option value="7">August</option>
+        <option value="8">September</option><option value="9">October</option><option value="10">November</option><option value="11">December</option>
+      </select></div></div>
+      <div class="filter-group"><label>Date from</label><input type="date" id="f-from"/></div>
+      <div class="filter-group"><label>Date to</label><input type="date" id="f-to"/></div>
+      <div class="filter-group"><label>Purpose</label><div class="select-wrap"><select id="f-purpose">
+        <option value="">All purposes</option>
+        <option>Admission</option><option>PTM</option><option>Meeting</option><option>Examination</option>
+        <option>Interview</option><option>Personal work</option><option>Other</option>
+      </select></div></div>
+    </div>
+    <div class="filter-actions">
+      <button class="btn-f btn-primary" onclick="applyFilters()">Apply filters</button>
+      <button class="btn-f btn-ghost"   onclick="resetFilters()">Reset</button>
+      <button class="btn-f btn-ghost"   onclick="loadData()" style="margin-left:auto;">↻ Refresh</button>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-header">
+      <span>Showing <strong id="count-label">—</strong> visitors</span>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+        <button class="btn-export" onclick="exportCSV()">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export CSV
+        </button>
+        <button class="btn-export" onclick="exportPDF()">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Export PDF
+        </button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Photo</th><th>Name</th><th>Mobile</th><th>Address</th><th>Purpose</th><th>With</th><th>Date &amp; Time</th></tr></thead>
+        <tbody id="tbl-body">
+          <tr><td colspan="8"><div class="state-box"><div class="spinner-ring"></div><p>Loading visitor data…</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  let allRows = [], filtered = [];
+
+  function parseDate(s) { try { return s ? new Date(s) : null; } catch(e) { return null; } }
+
+  function badgeClass(p) {
+    return {'meeting':'badge-meeting','delivery':'badge-delivery','interview':'badge-interview','personal work':'badge-personal','other':'badge-other'}[(p||'').toLowerCase()] || 'badge-other';
+  }
+
+  // ── DEMO DATA ─────────────────────────────────────────────────
+  const DEMO_ROWS = [
+    { name:'Rajesh Kumar Sharma',  mobile:'9831012345', address:'Flat 3B, Sukanta Nagar, Kolkata, WB',         purpose:'Admission',     accompany:'2', datetime:'11 May, 2026, 10:32:15 AM' },
+    { name:'Priya Devi Singh',     mobile:'8765432109', address:'12 Rabindra Road, Haldia, WB',                purpose:'PTM',           accompany:'1', datetime:'11 May, 2026, 11:05:44 AM' },
+    { name:'Mohammed Arif Khan',   mobile:'9123456780', address:'45 Park Street, Kolkata, WB',                 purpose:'Meeting',       accompany:'0', datetime:'10 May, 2026, 02:15:30 PM' },
+    { name:'Suman Chakraborty',    mobile:'7890123456', address:'8 Netaji Subhas Road, Midnapore, WB',         purpose:'Interview',     accompany:'0', datetime:'09 May, 2026, 09:45:00 AM' },
+    { name:'Anita Banerjee',       mobile:'9876543210', address:'22 Shyambazar Street, Kolkata, WB',           purpose:'Admission',     accompany:'3', datetime:'09 May, 2026, 03:20:10 PM' },
+    { name:'Deepak Mishra',        mobile:'8234567890', address:'7 Lal Bazaar, Asansol, WB',                  purpose:'Examination',   accompany:'0', datetime:'08 May, 2026, 10:00:00 AM' },
+    { name:'Kavita Rani Patel',    mobile:'9345678901', address:'Vill- Kolaghat, Purba Medinipur, WB',        purpose:'PTM',           accompany:'2', datetime:'07 May, 2026, 11:30:22 AM' },
+    { name:'Suresh Mondal',        mobile:'9012345678', address:'3 Canal Road, Durgapur, WB',                 purpose:'Personal work', accompany:'0', datetime:'06 May, 2026, 04:10:55 PM' },
+    { name:'Tanmoy Das',           mobile:'8901234567', address:'19 Bidhan Nagar, Siliguri, WB',              purpose:'Meeting',       accompany:'1', datetime:'05 May, 2026, 09:15:30 AM' },
+    { name:'Reshma Begum',         mobile:'7012345678', address:'Vill- Contai, Purba Medinipur, WB',         purpose:'Admission',     accompany:'4', datetime:'05 May, 2026, 02:45:00 PM' },
+    { name:'Sanjay Ghosh',         mobile:'9654321087', address:'Plot 11, Salt Lake City, Kolkata, WB',       purpose:'Other',         accompany:'0', datetime:'04 May, 2026, 01:00:12 PM' },
+    { name:'Meenakshi Iyer',       mobile:'8543210976', address:'21 Hindustan Park, Kolkata, WB',             purpose:'Meeting',       accompany:'0', datetime:'03 May, 2026, 03:55:40 PM' },
+  ];
+
+  function loadData() {
+    allRows = DEMO_ROWS;
+    buildYears(); applyFilters();
+  }
+
+  function buildYears() {
+    const years = [...new Set(allRows.map(r => { const d=parseDate(r.datetime); return d?d.getFullYear():null; }).filter(Boolean))].sort((a,b)=>b-a);
+    const sel = document.getElementById('f-year');
+    sel.innerHTML = '<option value="">All years</option>';
+    years.forEach(y => { const o=document.createElement('option'); o.value=y; o.textContent=y; sel.appendChild(o); });
+  }
+
+  function applyFilters() {
+    const yr=document.getElementById('f-year').value, mo=document.getElementById('f-month').value,
+          fr=document.getElementById('f-from').value, to=document.getElementById('f-to').value,
+          pu=document.getElementById('f-purpose').value.toLowerCase();
+    filtered = allRows.filter(r => {
+      const d=parseDate(r.datetime);
+      if (yr && d && d.getFullYear()!==parseInt(yr)) return false;
+      if (mo!=='' && d && d.getMonth()!==parseInt(mo)) return false;
+      if (fr && d && d<new Date(fr)) return false;
+      if (to && d && d>new Date(to+'T23:59:59')) return false;
+      if (pu && (r.purpose||'').toLowerCase()!==pu) return false;
+      return true;
+    });
+    renderTable(); updateStats();
+  }
+
+  function resetFilters() {
+    ['f-year','f-month','f-purpose'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('f-from').value=''; document.getElementById('f-to').value='';
+    applyFilters();
+  }
+
+  function renderTable() {
+    document.getElementById('count-label').textContent = filtered.length;
+    const tb = document.getElementById('tbl-body');
+    if (!filtered.length) { tb.innerHTML='<tr><td colspan="8"><div class="state-box"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><p>No visitors match the selected filters.</p></div></td></tr>'; return; }
+    tb.innerHTML = filtered.map((r,i) => `<tr>
+      <td class="sno">${i+1}</td>
+      <td>${r.photo_url ? `<img class="photo-thumb" src="${esc(r.photo_url)}" alt="photo" onclick="openLb('${esc(r.photo_url)}')">` : `<div class="no-photo"><svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>`}</td>
+      <td><strong>${esc(r.name)}</strong></td>
+      <td class="muted">${esc(r.mobile)}</td>
+      <td class="muted" style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(r.address)}">${esc(r.address)}</td>
+      <td><span class="badge ${badgeClass(r.purpose)}">${esc(r.purpose)}</span></td>
+      <td class="muted" style="text-align:center">${r.accompany && r.accompany !== '0' ? '+' + esc(r.accompany) : '—'}</td>
+      <td class="muted" style="white-space:nowrap">${esc(r.datetime)}</td>
+    </tr>`).join('');
+  }
+
+  function updateStats() {
+    const now=new Date(), ts=now.toDateString(), m=now.getMonth(), y=now.getFullYear();
+    document.getElementById('stat-total').textContent    = allRows.length;
+    document.getElementById('stat-filtered').textContent = filtered.length;
+    document.getElementById('stat-today').textContent    = allRows.filter(r=>{const d=parseDate(r.datetime);return d&&d.toDateString()===ts;}).length;
+    document.getElementById('stat-month').textContent    = allRows.filter(r=>{const d=parseDate(r.datetime);return d&&d.getMonth()===m&&d.getFullYear()===y;}).length;
+  }
+
+  function exportCSV() {
+    if (!filtered.length) return;
+    const headers = ['Name', 'Mobile', 'Address', 'Purpose', 'With', 'Date & Time'];
+    const rows = filtered.map(r => [r.name, r.mobile, r.address, r.purpose, r.accompany || '0', r.datetime]);
+    const csv = [headers, ...rows].map(row =>
+      row.map(v => '"' + (v || '').replace(/"/g, '""') + '"').join(',')
+    ).join('\r\n');
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'visitors_' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  function exportPDF() {
+    if (!filtered.length) return;
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'pt', format: 'a4' });
+
+    const accent = [26, 60, 94];
+    const lightBg = [232, 239, 246];
+
+    // Title
+    doc.setFillColor(...accent);
+    doc.rect(0, 0, doc.internal.pageSize.getWidth(), 44, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Visitor Records', 28, 28);
+
+    // Subtitle
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    const now = new Date().toLocaleString('en-IN', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    doc.text('Generated: ' + now + '   |   Total records: ' + filtered.length, 28, 40);
+
+    // Table
+    doc.autoTable({
+      startY: 56,
+      head: [['#', 'Name', 'Mobile', 'Address', 'Purpose', 'With', 'Date & Time']],
+      body: filtered.map((r, i) => [i + 1, r.name, r.mobile, r.address, r.purpose, r.accompany || '0', r.datetime]),
+      styles: { fontSize: 9, cellPadding: 6, font: 'helvetica', textColor: [28, 28, 28], lineColor: [224, 219, 211], lineWidth: 0.5 },
+      headStyles: { fillColor: accent, textColor: 255, fontStyle: 'bold', fontSize: 9 },
+      alternateRowStyles: { fillColor: lightBg },
+      columnStyles: {
+        0: { cellWidth: 24, halign: 'center' },
+        1: { cellWidth: 100 },
+        2: { cellWidth: 80 },
+        3: { cellWidth: 140 },
+        4: { cellWidth: 75 },
+        5: { cellWidth: 35, halign: 'center' },
+        6: { cellWidth: 110 }
+      },
+      margin: { left: 28, right: 28 },
+      didDrawPage: (data) => {
+        const pageH = doc.internal.pageSize.getHeight();
+        const pageW = doc.internal.pageSize.getWidth();
+        doc.setFontSize(8);
+        doc.setTextColor(160, 160, 160);
+        doc.text('VisitorLog — Confidential', 28, pageH - 14);
+        doc.text('Page ' + data.pageNumber, pageW - 60, pageH - 14);
+      }
+    });
+
+    doc.save('visitors_' + new Date().toISOString().slice(0, 10) + '.pdf');
+  }
+
+  function openLb(src) { document.getElementById('lb-img').src=src; document.getElementById('lightbox').classList.add('open'); }
+  function closeLb()   { document.getElementById('lightbox').classList.remove('open'); }
+  document.addEventListener('keydown', e => { if(e.key==='Escape') closeLb(); });
+
+  function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  window.addEventListener('load', loadData);
+</script>
+<script src="data/lib/jspdf.umd.min.js"></script>
+<script src="data/lib/jspdf.plugin.autotable.min.js"></script>
+</body>
+</html>

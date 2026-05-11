@@ -1,0 +1,9 @@
+# Real visitor data — never commit these
+data/visitors.csv
+data/.key
+data/photos/
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+desktop.ini
