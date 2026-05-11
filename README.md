@@ -2,6 +2,8 @@
 
 Live demo of the **VisitorLog** visitor management system built for facility/office use.
 
+**Link** - https://themrinal.github.io/Visitor_log_demo/
+
 **[→ Open Entry Form](index.html) &nbsp;|&nbsp; [→ View Records](visitor-list.html)**
 
 ---
